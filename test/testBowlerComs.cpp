@@ -40,59 +40,68 @@ static void assertReceiveSend(MockBowlerServer<N> *server,
 
 template <std::size_t N> void receive_seqnum_0() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2);
+  MAKE_PACKET(NoopPacket<N>, 2, true);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
-  assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
+  assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
 }
 
 template <std::size_t N> void receive_seqnum_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2);
+  MAKE_PACKET(NoopPacket<N>, 2, true);
 
   // Send SeqNum 1 first (not expected). Should ACK 1.
-  assertReceiveSend(server, coms, {1, 1, 0}, {1, 1, 1});
+  assertReceiveSend(server, coms, {2, 1, 0}, {2, 1, 1});
 }
 
 template <std::size_t N> void receive_seqnums_0_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2);
+  MAKE_PACKET(NoopPacket<N>, 2, true);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
-  assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
+  assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
 
   // Send SeqNum 1 (expected). Should ACK 1.
-  assertReceiveSend(server, coms, {1, 1, 0}, {1, 1, 1});
+  assertReceiveSend(server, coms, {2, 1, 0}, {2, 1, 1});
 }
 
 template <std::size_t N> void receive_seqnums_0_0() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2);
+  MAKE_PACKET(NoopPacket<N>, 2, true);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
-  assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
+  assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
 
   // Send SeqNum 0 (not expected). Should ACK 0.
-  assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
+  assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
 }
 
 template <std::size_t N> void receive_seqnums_0_1_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2);
+  MAKE_PACKET(NoopPacket<N>, 2, true);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
-  assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
+  assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
 
   // Send SeqNum 1 (expected). Should ACK 1.
-  assertReceiveSend(server, coms, {1, 1, 0}, {1, 1, 1});
+  assertReceiveSend(server, coms, {2, 1, 0}, {2, 1, 1});
 
   // Send SeqNum 1 (not expected). Should ACK 1.
-  assertReceiveSend(server, coms, {1, 1, 1}, {1, 1, 1});
+  assertReceiveSend(server, coms, {2, 1, 1}, {2, 1, 1});
 }
 
 template <std::size_t N> void attach_server_management_packet_id() {
   SETUP_BOWLER_COMS;
   TEST_ASSERT_EQUAL_INT(BOWLER_ERROR, MAKE_PACKET(NoopPacket<N>, SERVER_MANAGEMENT_PACKET_ID));
+}
+
+template <std::size_t N> void unreliable() {
+  SETUP_BOWLER_COMS;
+  MAKE_PACKET(NoopPacket<N>, 2, false);
+
+  // Unreliable should just echo the header
+  assertReceiveSend(server, coms, {2, 0, 0}, {2, 0, 0});
+  assertReceiveSend(server, coms, {2, 1, 1}, {2, 1, 1});
 }
 
 void setup() {
@@ -104,6 +113,7 @@ void setup() {
   RUN_TEST(receive_seqnums_0_0<DEFAULT_PACKET_SIZE>);
   RUN_TEST(receive_seqnums_0_1_1<DEFAULT_PACKET_SIZE>);
   RUN_TEST(attach_server_management_packet_id<DEFAULT_PACKET_SIZE>);
+  RUN_TEST(unreliable<DEFAULT_PACKET_SIZE>);
   UNITY_END();
 }
 
