@@ -14,20 +14,18 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with bowler-device-server.  If not, see <https://www.gnu.org/licenses/>.
  */
-#if !defined(UNIT_TEST)
+#pragma once
 
-#include "bowlerServerController.hpp"
+#include "errno.h"
 #include <Arduino.h>
-#include <Esp32WifiManager.h>
 
-BowlerServerController *controller;
+#define BOWLER_ERROR INT32_MAX
+#define DEFAULT_PACKET_SIZE 64
 
-void setup() {
-  controller = new BowlerServerController();
-}
-
-void loop() {
-  controller->loop();
-}
-
+#if defined(PLATFORM_ESP32)
+#define time_t int64_t
+#elif defined(PLATFORM_TEENSY)
+#define time_t uint32_t
 #endif
+
+time_t getTime();

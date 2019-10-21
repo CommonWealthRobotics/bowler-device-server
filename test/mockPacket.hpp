@@ -14,20 +14,16 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with bowler-device-server.  If not, see <https://www.gnu.org/licenses/>.
  */
-#if !defined(UNIT_TEST)
+#pragma once
 
-#include "bowlerServerController.hpp"
-#include <Arduino.h>
-#include <Esp32WifiManager.h>
+#include "bowlerComs.hpp"
 
-BowlerServerController *controller;
+template <std::size_t N> class MockPacket : public Packet<N> {
+  public:
+  MockPacket(std::uint8_t iid) : Packet<N>(iid) {
+  }
 
-void setup() {
-  controller = new BowlerServerController();
-}
-
-void loop() {
-  controller->loop();
-}
-
-#endif
+  std::int32_t event(std::array<std::uint8_t, N> payload) override {
+    return 1;
+  }
+};

@@ -14,20 +14,15 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with bowler-device-server.  If not, see <https://www.gnu.org/licenses/>.
  */
-#if !defined(UNIT_TEST)
+#pragma once
 
-#include "bowlerServerController.hpp"
-#include <Arduino.h>
-#include <Esp32WifiManager.h>
+#include <array>
+#include <cstdint>
 
-BowlerServerController *controller;
-
-void setup() {
-  controller = new BowlerServerController();
-}
-
-void loop() {
-  controller->loop();
-}
-
-#endif
+template <std::size_t N> class BowlerServer {
+  public:
+  virtual ~BowlerServer() = default;
+  virtual std::int32_t write(std::array<std::uint8_t, N> payload) = 0;
+  virtual std::int32_t read(std::array<std::uint8_t, N> &payload) = 0;
+  virtual std::int32_t isDataAvailable(bool &available) = 0;
+};
