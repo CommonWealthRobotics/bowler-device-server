@@ -1,0 +1,12 @@
+{
+    "name": "bowler-device-server",
+    "version": "0.1.0",
+    "keywords": "bowler, rpc, esp32, teensy, wifi, hid",
+    "description": "The device-side implementation of the Bowler server.",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/CommonWealthRobotics/bowler-device-server.git"
+    },
+    "frameworks": "arduino",
+    "platforms": "*"
+}
