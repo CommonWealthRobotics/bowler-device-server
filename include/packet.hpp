@@ -4,7 +4,7 @@
 
 template <std::size_t N> class Packet {
   public:
-  Packet(std::uint8_t iid) : id(iid) {
+  Packet(std::uint8_t iid, bool iisReliable = false) : id(iid), m_isReliable(iisReliable) {
   }
 
   virtual ~Packet() = default;
@@ -15,6 +15,11 @@ template <std::size_t N> class Packet {
     return id;
   }
 
+  bool isReliable() const {
+    return m_isReliable;
+  }
+
   protected:
   std::uint8_t id;
+  bool m_isReliable;
 };

@@ -24,7 +24,12 @@
 #include <memory>
 
 #define HEADER_LENGTH 3
+#define SERVER_MANAGEMENT_PACKET_ID 1
 
+/**
+ * Buffer format is:
+ * <ID (1 byte)> <Seq Num (1 byte)> <ACK num (1 byte)> <Payload (N bytes)>.
+ */
 template <std::size_t N> class BowlerComs {
   // The entire packet length must be at least the header length plus one payload byte
   static_assert(N >= HEADER_LENGTH + 1,
@@ -36,7 +41,20 @@ template <std::size_t N> class BowlerComs {
 
   virtual ~BowlerComs() = default;
 
+  /**
+   * Adds a packet event handler. The packet id cannot be equal to the
+   * SERVER_MANAGEMENT_PACKET_ID. The packet id cannot already be used.
+   *
+   * @param ipacket The packet event handler.
+   * @return `1` on success or BOWLER_ERROR on error.
+   */
   std::int32_t addPacket(std::unique_ptr<Packet<N>> ipacket) {
+    if (ipacket->getId() == SERVER_MANAGEMENT_PACKET_ID) {
+      // Can't overlap with the management packet id
+      errno = EINVAL;
+      return BOWLER_ERROR;
+    }
+
     if (packets.find(ipacket->getId()) == packets.end()) {
       packets[ipacket->getId()] = std::move(ipacket);
     } else {
@@ -48,12 +66,19 @@ template <std::size_t N> class BowlerComs {
     return 1;
   }
 
+  /**
+   * Removes a packet event handler.
+   *
+   * @param iid The id of the packet.
+   */
   void removePacket(const std::uint8_t iid) {
     packets.erase(iid);
   }
 
   /**
    * Run an iteration of coms.
+   *
+   * @return `1` on success or BOWLER_ERROR on error.
    */
   std::int32_t loop() {
     bool isDataAvailable;
@@ -64,7 +89,29 @@ template <std::size_t N> class BowlerComs {
 
         std::int32_t error = server->read(data);
         if (error != BOWLER_ERROR) {
-          input(data);
+          auto id = getPacketId(data);
+          auto packet = packets.find(id);
+          if (packet == packets.end()) {
+            // The corresponding packet was not found, meaning there is no handler registered for
+            // it. Clear the payload and reply.
+            std::fill(std::next(data.begin(), HEADER_LENGTH), data.end(), 0);
+
+            auto writeError = server->write(data);
+            if (writeError == BOWLER_ERROR) {
+              Serial.printf(
+                "Error while replying to unregistered packet: %d %s\n", errno, strerror(errno));
+            }
+
+            errno = ENODEV;
+            return BOWLER_ERROR;
+          } else {
+            // The packet handler was found
+            if (packet->second->isReliable()) {
+              handlePacketReliable(packet, data);
+            } else {
+              handlePacketUnreliable(packet, data);
+            }
+          }
         } else {
           // Error reading data
           Serial.printf("Error reading: %d %s\n", errno, strerror(errno));
@@ -83,19 +130,36 @@ template <std::size_t N> class BowlerComs {
 
   protected:
   /**
-   * Buffer format should be:
-   * <ID (1 byte)> <Seq Num (1 byte)> <ACK num (1 byte)> <Payload (N bytes)>.
+   * Handles a packet for unreliable transport.
    *
    * @param idata Data that was just read from the receive buffer.
    */
-  void input(std::array<std::uint8_t, N> &idata) {
+  template <typename T>
+  void handlePacketUnreliable(T &ipacket, std::array<std::uint8_t, N> &idata) {
+    auto error = ipacket->second->event(idata);
+    if (error == BOWLER_ERROR) {
+      Serial.printf("Error handling packet event: %d %s\n", errno, strerror(errno));
+    }
+
+    error = server->write(idata);
+    if (error == BOWLER_ERROR) {
+      Serial.printf("Error writing: %d %s\n", errno, strerror(errno));
+    }
+  }
+
+  /**
+   * Handles a packet for reliable transport.
+   *
+   * @param idata Data that was just read from the receive buffer.
+   */
+  template <typename T> void handlePacketReliable(T &ipacket, std::array<std::uint8_t, N> &idata) {
     switch (state) {
     case waitForZero: {
       if (getSeqNum(idata) == 0) {
         // Right payload. Handle it.
-        auto error = handlePacket(idata);
+        auto error = ipacket->second->event(idata);
         if (error == BOWLER_ERROR) {
-          Serial.printf("Error handling packet: %d %s\n", errno, strerror(errno));
+          Serial.printf("Error handling packet event: %d %s\n", errno, strerror(errno));
         }
 
         // ACK it and start waiting for the next packet.
@@ -120,9 +184,9 @@ template <std::size_t N> class BowlerComs {
     case waitForOne: {
       if (getSeqNum(idata) == 1) {
         // Right payload. Handle it.
-        auto error = handlePacket(idata);
+        auto error = ipacket->second->event(idata);
         if (error == BOWLER_ERROR) {
-          Serial.printf("Error handling packet: %d %s\n", errno, strerror(errno));
+          Serial.printf("Error handling packet event: %d %s\n", errno, strerror(errno));
         }
 
         // ACK it and start waiting for the next packet.
@@ -146,27 +210,6 @@ template <std::size_t N> class BowlerComs {
     }
   }
 
-  /**
-   * Handle passing the payload to the packet and getting its response. Assumes that the packet
-   * should be handled (i.e., all logic to verify the payload is the right one, etc. should be
-   * done).
-   */
-  std::int32_t handlePacket(std::array<std::uint8_t, N> &idata) {
-    auto id = getPacketId(idata);
-    auto packet = packets.find(id);
-    if (packet == packets.end()) {
-      // The corresponding packet was not found, meaning there is no handler registered for it.
-      // Clear the buffer and exit.
-      std::fill(idata.begin(), idata.end(), 0);
-      errno = ENODEV;
-      return BOWLER_ERROR;
-    } else {
-      // The packet handler was found. Let it read from and then write to the buffer. Return its
-      // exit code (it may set errno, etc.).
-      return packet->second->event(idata);
-    }
-  }
-
   std::uint8_t getPacketId(const std::array<std::uint8_t, N> &idata) const {
     return idata.at(0);
   }
@@ -187,7 +230,6 @@ template <std::size_t N> class BowlerComs {
     idata.at(2) = iackNum;
   }
 
-  private:
   enum states_t { waitForZero, waitForOne };
   states_t state{waitForZero};
   std::unique_ptr<BowlerServer<N>> server;

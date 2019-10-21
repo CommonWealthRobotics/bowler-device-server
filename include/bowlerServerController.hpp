@@ -80,7 +80,7 @@ class BowlerServerController {
     manager.setupAP();
 
     coms.addPacket(
-      std::unique_ptr<NoopPacket<DEFAULT_PACKET_SIZE>>(new NoopPacket<DEFAULT_PACKET_SIZE>(1)));
+      std::unique_ptr<NoopPacket<DEFAULT_PACKET_SIZE>>(new NoopPacket<DEFAULT_PACKET_SIZE>(2, true)));
 #elif defined(USE_HID)
 #else
     Serial.begin(115200);

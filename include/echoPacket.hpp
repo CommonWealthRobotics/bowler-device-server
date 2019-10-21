@@ -19,9 +19,12 @@
 #include "packet.hpp"
 #include <Arduino.h>
 
+/**
+ * A Packet that prints its payload to serial. Does not modify the payload.
+ */
 template <std::size_t N> class EchoPacket : public Packet<N> {
   public:
-  EchoPacket(std::uint8_t iid) : Packet<N>(iid) {
+  EchoPacket(std::uint8_t iid, bool iisReliable = false) : Packet<N>(iid, iisReliable) {
   }
 
   std::int32_t event(std::array<std::uint8_t, N> payload) override {

@@ -24,6 +24,9 @@
 
 #define BOWLER_SERVER_UDP_PORT 1866
 
+/**
+ * A BowlerServer which uses UDP. Listens on port BOWLER_SERVER_UDP_PORT.
+ */
 template <std::size_t N> class UDPServer : public BowlerServer<N> {
   public:
   UDPServer() {

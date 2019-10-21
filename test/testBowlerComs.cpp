@@ -40,7 +40,7 @@ static void assertReceiveSend(MockBowlerServer<N> *server,
 
 template <std::size_t N> void receive_seqnum_0() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 2);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
@@ -48,7 +48,7 @@ template <std::size_t N> void receive_seqnum_0() {
 
 template <std::size_t N> void receive_seqnum_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 2);
 
   // Send SeqNum 1 first (not expected). Should ACK 1.
   assertReceiveSend(server, coms, {1, 1, 0}, {1, 1, 1});
@@ -56,7 +56,7 @@ template <std::size_t N> void receive_seqnum_1() {
 
 template <std::size_t N> void receive_seqnums_0_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 2);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
@@ -67,7 +67,7 @@ template <std::size_t N> void receive_seqnums_0_1() {
 
 template <std::size_t N> void receive_seqnums_0_0() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 2);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
@@ -78,7 +78,7 @@ template <std::size_t N> void receive_seqnums_0_0() {
 
 template <std::size_t N> void receive_seqnums_0_1_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 2);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
@@ -90,6 +90,11 @@ template <std::size_t N> void receive_seqnums_0_1_1() {
   assertReceiveSend(server, coms, {1, 1, 1}, {1, 1, 1});
 }
 
+template <std::size_t N> void attach_server_management_packet_id() {
+  SETUP_BOWLER_COMS;
+  TEST_ASSERT_EQUAL_INT(BOWLER_ERROR, MAKE_PACKET(NoopPacket<N>, SERVER_MANAGEMENT_PACKET_ID));
+}
+
 void setup() {
   delay(2000);
   UNITY_BEGIN();
@@ -98,6 +103,7 @@ void setup() {
   RUN_TEST(receive_seqnums_0_1<DEFAULT_PACKET_SIZE>);
   RUN_TEST(receive_seqnums_0_0<DEFAULT_PACKET_SIZE>);
   RUN_TEST(receive_seqnums_0_1_1<DEFAULT_PACKET_SIZE>);
+  RUN_TEST(attach_server_management_packet_id<DEFAULT_PACKET_SIZE>);
   UNITY_END();
 }
 

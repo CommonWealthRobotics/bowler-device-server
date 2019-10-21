@@ -53,6 +53,7 @@
         "utility": "cpp",
         "typeinfo": "cpp",
         "*.ipp": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "random": "cpp"
     }
 }
