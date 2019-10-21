@@ -17,29 +17,13 @@
 #pragma once
 
 #include "bowlerServer.hpp"
+#include "packet.hpp"
 #include "util.hpp"
 #include <array>
-#include <cstdint>
 #include <map>
 #include <memory>
 
 #define HEADER_LENGTH 3
-template <std::size_t N> class Packet {
-  public:
-  Packet(std::uint8_t iid) : id(iid) {
-  }
-
-  virtual ~Packet() = default;
-
-  virtual std::int32_t event(std::array<std::uint8_t, N> payload) = 0;
-
-  std::uint8_t getId() const {
-    return id;
-  }
-
-  protected:
-  std::uint8_t id;
-};
 
 template <std::size_t N> class BowlerComs {
   // The entire packet length must be at least the header length plus one payload byte
@@ -87,8 +71,11 @@ template <std::size_t N> class BowlerComs {
         }
       }
     } else {
-      // Error running isDataAvailable
-      Serial.printf("Error peeking: %d %s\n", errno, strerror(errno));
+      // Error running isDataAvailable. EWOULDBLOCK is typical of having no data (not really an
+      // error).
+      if (errno != EWOULDBLOCK) {
+        Serial.printf("Error peeking: %d %s\n", errno, strerror(errno));
+      }
     }
 
     return 1;

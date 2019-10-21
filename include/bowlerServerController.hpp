@@ -17,6 +17,7 @@
 #pragma once
 
 #include "bowlerComs.hpp"
+#include "noopPacket.hpp"
 #include "udpServer.hpp"
 #include "util.hpp"
 #include <Arduino.h>
@@ -77,6 +78,9 @@ class BowlerServerController {
 
 #if defined(USE_WIFI)
     manager.setupAP();
+
+    coms.addPacket(
+      std::unique_ptr<NoopPacket<DEFAULT_PACKET_SIZE>>(new NoopPacket<DEFAULT_PACKET_SIZE>(1)));
 #elif defined(USE_HID)
 #else
     Serial.begin(115200);

@@ -16,11 +16,12 @@
  */
 #pragma once
 
-#include "bowlerComs.hpp"
+#include "packet.hpp"
+#include <Arduino.h>
 
-template <std::size_t N> class MockPacket : public Packet<N> {
+template <std::size_t N> class NoopPacket : public Packet<N> {
   public:
-  MockPacket(std::uint8_t iid) : Packet<N>(iid) {
+  NoopPacket(std::uint8_t iid) : Packet<N>(iid) {
   }
 
   std::int32_t event(std::array<std::uint8_t, N> payload) override {

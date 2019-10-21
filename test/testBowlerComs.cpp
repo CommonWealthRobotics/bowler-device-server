@@ -16,7 +16,7 @@
  */
 #include "bowlerComs.hpp"
 #include "mockBowlerServer.hpp"
-#include "mockPacket.hpp"
+#include "noopPacket.hpp"
 #include <unity.h>
 
 #define SETUP_BOWLER_COMS                                                                          \
@@ -40,7 +40,7 @@ static void assertReceiveSend(MockBowlerServer<N> *server,
 
 template <std::size_t N> void receive_seqnum_0() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(MockPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 1);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
@@ -48,7 +48,7 @@ template <std::size_t N> void receive_seqnum_0() {
 
 template <std::size_t N> void receive_seqnum_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(MockPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 1);
 
   // Send SeqNum 1 first (not expected). Should ACK 1.
   assertReceiveSend(server, coms, {1, 1, 0}, {1, 1, 1});
@@ -56,7 +56,7 @@ template <std::size_t N> void receive_seqnum_1() {
 
 template <std::size_t N> void receive_seqnums_0_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(MockPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 1);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
@@ -67,7 +67,7 @@ template <std::size_t N> void receive_seqnums_0_1() {
 
 template <std::size_t N> void receive_seqnums_0_0() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(MockPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 1);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
@@ -78,7 +78,7 @@ template <std::size_t N> void receive_seqnums_0_0() {
 
 template <std::size_t N> void receive_seqnums_0_1_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(MockPacket<N>, 1);
+  MAKE_PACKET(NoopPacket<N>, 1);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {1, 0, 1}, {1, 0, 0});
