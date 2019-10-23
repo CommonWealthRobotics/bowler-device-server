@@ -20,10 +20,12 @@
 #include <Arduino.h>
 #include <Esp32WifiManager.h>
 
-BowlerServerController *controller;
+BowlerServerController<DEFAULT_PACKET_SIZE> *controller;
 
 void setup() {
-  controller = new BowlerServerController();
+  controller = new BowlerServerController<DEFAULT_PACKET_SIZE>();
+  controller->getComs().addPacket(
+    std::unique_ptr<NoopPacket<DEFAULT_PACKET_SIZE>>(new NoopPacket<DEFAULT_PACKET_SIZE>(2, true)));
 }
 
 void loop() {

@@ -23,7 +23,7 @@
 #include <Arduino.h>
 #include <Esp32WifiManager.h>
 
-class BowlerServerController {
+template <std::size_t N> class BowlerServerController {
   public:
   void loop() {
     time_t time = getTime();
@@ -68,6 +68,10 @@ class BowlerServerController {
     }
   }
 
+  BowlerComs<N> &getComs() {
+    return coms;
+  }
+
   protected:
   void setup() {
     if (state != startup) {
@@ -78,9 +82,6 @@ class BowlerServerController {
 
 #if defined(USE_WIFI)
     manager.setupAP();
-
-    coms.addPacket(
-      std::unique_ptr<NoopPacket<DEFAULT_PACKET_SIZE>>(new NoopPacket<DEFAULT_PACKET_SIZE>(2, true)));
 #elif defined(USE_HID)
 #else
     Serial.begin(115200);
@@ -95,8 +96,7 @@ class BowlerServerController {
 
 #if defined(USE_WIFI)
   WifiManager manager;
-  BowlerComs<DEFAULT_PACKET_SIZE> coms{
-    std::unique_ptr<UDPServer<DEFAULT_PACKET_SIZE>>(new UDPServer<DEFAULT_PACKET_SIZE>())};
+  BowlerComs<N> coms{std::unique_ptr<UDPServer<N>>(new UDPServer<N>())};
 #elif defined(USE_HID)
 #error "BowlerServerController not implemented for HID yet."
 #endif
