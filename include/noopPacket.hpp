@@ -16,18 +16,18 @@
  */
 #pragma once
 
-#include "packet.hpp"
+#include "bowlerPacket.hpp"
 #include <Arduino.h>
 
 /**
  * A Packet which does nothing.
  */
-template <std::size_t N> class NoopPacket : public Packet<N> {
+class NoopPacket : public Packet {
   public:
-  NoopPacket(std::uint8_t iid, bool iisReliable = false) : Packet<N>(iid, iisReliable) {
+  NoopPacket(std::uint8_t iid, bool iisReliable = false) : Packet(iid, iisReliable) {
   }
 
-  std::int32_t event(std::array<std::uint8_t, N> payload) override {
+  std::int32_t event(std::uint8_t *payload) override {
     return 1;
   }
 };

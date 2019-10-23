@@ -17,13 +17,13 @@
 #pragma once
 
 #include "bowlerComs.hpp"
+#include "bowlerDeviceServerUtil.hpp"
+#include "bowlerUdpServer.hpp"
 #include "noopPacket.hpp"
-#include "udpServer.hpp"
-#include "util.hpp"
 #include <Arduino.h>
 #include <Esp32WifiManager.h>
 
-template <std::size_t N> class BowlerServerController {
+template <std::size_t N> class BowlerComsController {
   public:
   void loop() {
     time_t time = getTime();

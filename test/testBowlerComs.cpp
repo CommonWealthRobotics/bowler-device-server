@@ -16,6 +16,7 @@
  */
 #include "bowlerComs.hpp"
 #include "mockBowlerServer.hpp"
+#include "mockPacket.hpp"
 #include "noopPacket.hpp"
 #include <unity.h>
 
@@ -25,7 +26,7 @@
     std::unique_ptr<MockBowlerServer<N>>(server)                                                   \
   }
 
-#define MAKE_PACKET(typeName, args...) coms.addPacket(std::unique_ptr<typeName>(new typeName(args)))
+#define MAKE_PACKET(typeName, args...) coms.addPacket(std::shared_ptr<typeName>(new typeName(args)))
 
 template <std::size_t N>
 static void assertReceiveSend(MockBowlerServer<N> *server,
@@ -40,7 +41,7 @@ static void assertReceiveSend(MockBowlerServer<N> *server,
 
 template <std::size_t N> void receive_seqnum_0() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2, true);
+  MAKE_PACKET(NoopPacket, 2, true);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
@@ -48,7 +49,7 @@ template <std::size_t N> void receive_seqnum_0() {
 
 template <std::size_t N> void receive_seqnum_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2, true);
+  MAKE_PACKET(NoopPacket, 2, true);
 
   // Send SeqNum 1 first (not expected). Should ACK 1.
   assertReceiveSend(server, coms, {2, 1, 0}, {2, 1, 1});
@@ -56,7 +57,7 @@ template <std::size_t N> void receive_seqnum_1() {
 
 template <std::size_t N> void receive_seqnums_0_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2, true);
+  MAKE_PACKET(NoopPacket, 2, true);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
@@ -67,7 +68,7 @@ template <std::size_t N> void receive_seqnums_0_1() {
 
 template <std::size_t N> void receive_seqnums_0_0() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2, true);
+  MAKE_PACKET(NoopPacket, 2, true);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
@@ -78,7 +79,7 @@ template <std::size_t N> void receive_seqnums_0_0() {
 
 template <std::size_t N> void receive_seqnums_0_1_1() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2, true);
+  MAKE_PACKET(NoopPacket, 2, true);
 
   // Send SeqNum 0 first (expected). Should ACK 0.
   assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
@@ -92,16 +93,28 @@ template <std::size_t N> void receive_seqnums_0_1_1() {
 
 template <std::size_t N> void attach_server_management_packet_id() {
   SETUP_BOWLER_COMS;
-  TEST_ASSERT_EQUAL_INT(BOWLER_ERROR, MAKE_PACKET(NoopPacket<N>, SERVER_MANAGEMENT_PACKET_ID));
+  TEST_ASSERT_EQUAL_INT(BOWLER_ERROR, MAKE_PACKET(NoopPacket, SERVER_MANAGEMENT_PACKET_ID));
 }
 
 template <std::size_t N> void unreliable() {
   SETUP_BOWLER_COMS;
-  MAKE_PACKET(NoopPacket<N>, 2, false);
+  MAKE_PACKET(NoopPacket, 2, false);
 
   // Unreliable should just echo the header
   assertReceiveSend(server, coms, {2, 0, 0}, {2, 0, 0});
   assertReceiveSend(server, coms, {2, 1, 1}, {2, 1, 1});
+}
+
+template <std::size_t N> void packet_does_not_get_header_data() {
+  SETUP_BOWLER_COMS;
+  std::shared_ptr<MockPacket> mockPacket(new MockPacket(2, false));
+  coms.addPacket(mockPacket);
+
+  // The first (and only) payload should be all 0's because the header data should be stripped
+  assertReceiveSend(server, coms, {2, 1, 1}, {2, 1, 1});
+
+  std::array<std::uint8_t, DEFAULT_PACKET_SIZE - HEADER_LENGTH> expected{};
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data(), mockPacket->payloads[0].data(), expected.size());
 }
 
 void setup() {
@@ -114,6 +127,7 @@ void setup() {
   RUN_TEST(receive_seqnums_0_1_1<DEFAULT_PACKET_SIZE>);
   RUN_TEST(attach_server_management_packet_id<DEFAULT_PACKET_SIZE>);
   RUN_TEST(unreliable<DEFAULT_PACKET_SIZE>);
+  RUN_TEST(packet_does_not_get_header_data<DEFAULT_PACKET_SIZE>);
   UNITY_END();
 }
 

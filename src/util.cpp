@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with bowler-device-server.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "util.hpp"
+#include "bowlerDeviceServerUtil.hpp"
 
 #if defined(PLATFORM_ESP32)
 time_t getTime() {

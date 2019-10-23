@@ -16,16 +16,26 @@
  */
 #pragma once
 
-#include "errno.h"
-#include <Arduino.h>
+#include "bowlerDeviceServerUtil.hpp"
+#include "bowlerPacket.hpp"
+#include <array>
+#include <cstring>
+#include <vector>
 
-#define BOWLER_ERROR INT32_MAX
-#define DEFAULT_PACKET_SIZE 64
+/**
+ * A Packet which records the payloads it receives.
+ */
+class MockPacket : public Packet {
+  public:
+  MockPacket(std::uint8_t iid, bool iisReliable = false) : Packet(iid, iisReliable) {
+  }
 
-#if defined(PLATFORM_ESP32)
-#define time_t int64_t
-#elif defined(PLATFORM_TEENSY)
-#define time_t uint32_t
-#endif
+  std::int32_t event(std::uint8_t *payload) override {
+    std::array<std::uint8_t, DEFAULT_PAYLOAD_SIZE> copy;
+    std::memcpy(copy.data(), payload, DEFAULT_PAYLOAD_SIZE * sizeof(payload[0]));
+    payloads.push_back(copy);
+    return 1;
+  }
 
-time_t getTime();
+  std::vector<std::array<std::uint8_t, DEFAULT_PAYLOAD_SIZE>> payloads;
+};

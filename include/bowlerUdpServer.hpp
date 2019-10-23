@@ -16,8 +16,8 @@
  */
 #pragma once
 
+#include "bowlerDeviceServerUtil.hpp"
 #include "bowlerServer.hpp"
-#include "util.hpp"
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <functional>

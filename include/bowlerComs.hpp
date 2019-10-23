@@ -16,14 +16,13 @@
  */
 #pragma once
 
+#include "bowlerDeviceServerUtil.hpp"
+#include "bowlerPacket.hpp"
 #include "bowlerServer.hpp"
-#include "packet.hpp"
-#include "util.hpp"
 #include <array>
 #include <map>
 #include <memory>
 
-#define HEADER_LENGTH 3
 #define SERVER_MANAGEMENT_PACKET_ID 1
 
 /**
@@ -48,7 +47,7 @@ template <std::size_t N> class BowlerComs {
    * @param ipacket The packet event handler.
    * @return `1` on success or BOWLER_ERROR on error.
    */
-  std::int32_t addPacket(std::unique_ptr<Packet<N>> ipacket) {
+  std::int32_t addPacket(const std::shared_ptr<Packet> &ipacket) {
     if (ipacket->getId() == SERVER_MANAGEMENT_PACKET_ID) {
       // Can't overlap with the management packet id
       errno = EINVAL;
@@ -56,7 +55,7 @@ template <std::size_t N> class BowlerComs {
     }
 
     if (packets.find(ipacket->getId()) == packets.end()) {
-      packets[ipacket->getId()] = std::move(ipacket);
+      packets[ipacket->getId()] = ipacket;
     } else {
       // The packet id is already used
       errno = EINVAL;
@@ -136,7 +135,7 @@ template <std::size_t N> class BowlerComs {
    */
   template <typename T>
   void handlePacketUnreliable(T &ipacket, std::array<std::uint8_t, N> &idata) {
-    auto error = ipacket->second->event(idata);
+    auto error = ipacket->second->event(idata.data() + HEADER_LENGTH);
     if (error == BOWLER_ERROR) {
       Serial.printf("Error handling packet event: %d %s\n", errno, strerror(errno));
     }
@@ -157,7 +156,7 @@ template <std::size_t N> class BowlerComs {
     case waitForZero: {
       if (getSeqNum(idata) == 0) {
         // Right payload. Handle it.
-        auto error = ipacket->second->event(idata);
+        auto error = ipacket->second->event(idata.data() + HEADER_LENGTH);
         if (error == BOWLER_ERROR) {
           Serial.printf("Error handling packet event: %d %s\n", errno, strerror(errno));
         }
@@ -184,7 +183,7 @@ template <std::size_t N> class BowlerComs {
     case waitForOne: {
       if (getSeqNum(idata) == 1) {
         // Right payload. Handle it.
-        auto error = ipacket->second->event(idata);
+        auto error = ipacket->second->event(idata.data() + HEADER_LENGTH);
         if (error == BOWLER_ERROR) {
           Serial.printf("Error handling packet event: %d %s\n", errno, strerror(errno));
         }
@@ -233,5 +232,5 @@ template <std::size_t N> class BowlerComs {
   enum states_t { waitForZero, waitForOne };
   states_t state{waitForZero};
   std::unique_ptr<BowlerServer<N>> server;
-  std::map<std::uint8_t, std::unique_ptr<Packet<N>>> packets;
+  std::map<std::uint8_t, std::shared_ptr<Packet>> packets;
 };

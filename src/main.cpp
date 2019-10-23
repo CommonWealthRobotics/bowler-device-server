@@ -16,16 +16,15 @@
  */
 #if !defined(UNIT_TEST)
 
-#include "bowlerServerController.hpp"
+#include "bowlerComsController.hpp"
 #include <Arduino.h>
 #include <Esp32WifiManager.h>
 
-BowlerServerController<DEFAULT_PACKET_SIZE> *controller;
+BowlerComsController<DEFAULT_PACKET_SIZE> *controller;
 
 void setup() {
-  controller = new BowlerServerController<DEFAULT_PACKET_SIZE>();
-  controller->getComs().addPacket(
-    std::unique_ptr<NoopPacket<DEFAULT_PACKET_SIZE>>(new NoopPacket<DEFAULT_PACKET_SIZE>(2, true)));
+  controller = new BowlerComsController<DEFAULT_PACKET_SIZE>();
+  controller->getComs().addPacket(std::shared_ptr<NoopPacket>(new NoopPacket(2, true)));
 }
 
 void loop() {

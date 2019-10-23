@@ -16,23 +16,18 @@
  */
 #pragma once
 
-#include "bowlerDeviceServerUtil.hpp"
-#include "bowlerPacket.hpp"
+#include "errno.h"
 #include <Arduino.h>
 
-/**
- * A Packet that prints its payload to serial. Does not modify the payload.
- */
-class EchoPacket : public Packet {
-  public:
-  EchoPacket(std::uint8_t iid, bool iisReliable = false) : Packet(iid, iisReliable) {
-  }
+#define BOWLER_ERROR INT32_MAX
+#define DEFAULT_PACKET_SIZE 64
+#define HEADER_LENGTH 3
+#define DEFAULT_PAYLOAD_SIZE (DEFAULT_PACKET_SIZE - HEADER_LENGTH)
 
-  std::int32_t event(std::uint8_t *payload) override {
-    for (int i = 0; i < DEFAULT_PAYLOAD_SIZE; i++) {
-      Serial.printf("%u, ", payload[i]);
-    }
-    Serial.print("\n");
-    return 1;
-  }
-};
+#if defined(PLATFORM_ESP32)
+#define time_t int64_t
+#elif defined(PLATFORM_TEENSY)
+#define time_t uint32_t
+#endif
+
+time_t getTime();

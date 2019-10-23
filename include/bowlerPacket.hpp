@@ -1,15 +1,22 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
-template <std::size_t N> class Packet {
+class Packet {
   public:
   Packet(std::uint8_t iid, bool iisReliable = false) : id(iid), m_isReliable(iisReliable) {
   }
 
   virtual ~Packet() = default;
 
-  virtual std::int32_t event(std::array<std::uint8_t, N> payload) = 0;
+  /**
+   * Processes the payload (read from it, do something, write back into it).
+   *
+   * @param payload The payload (not including header data).
+   * @return `1` on success or BOWLER_ERROR on error.
+   */
+  virtual std::int32_t event(std::uint8_t *payload) = 0;
 
   std::uint8_t getId() const {
     return id;
