@@ -47,7 +47,7 @@ template <std::size_t N> class BowlerComs {
    * @param ipacket The packet event handler.
    * @return `1` on success or BOWLER_ERROR on error.
    */
-  std::int32_t addPacket(const std::shared_ptr<Packet> &ipacket) {
+  std::int32_t addPacket(std::shared_ptr<Packet> ipacket) {
     if (ipacket->getId() == SERVER_MANAGEMENT_PACKET_ID) {
       // Can't overlap with the management packet id
       errno = EINVAL;
@@ -55,7 +55,7 @@ template <std::size_t N> class BowlerComs {
     }
 
     if (packets.find(ipacket->getId()) == packets.end()) {
-      packets[ipacket->getId()] = ipacket;
+      packets[ipacket->getId()] = std::move(ipacket);
     } else {
       // The packet id is already used
       errno = EINVAL;
