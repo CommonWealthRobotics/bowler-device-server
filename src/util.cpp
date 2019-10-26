@@ -16,7 +16,7 @@
  */
 #include "bowlerDeviceServerUtil.hpp"
 
-namespace bowler {
+namespace bowlerserver {
 #if defined(PLATFORM_ESP32)
 time_t getTime() {
   return esp_timer_get_time();
@@ -26,4 +26,4 @@ time_t getTime() {
   return micros();
 }
 #endif
-} // namespace bowler
+} // namespace bowlerserver

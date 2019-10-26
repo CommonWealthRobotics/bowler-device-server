@@ -22,7 +22,7 @@
 #include <WiFiUdp.h>
 #include <functional>
 
-namespace bowler {
+namespace bowlerserver {
 const std::uint16_t BOWLER_SERVER_UDP_PORT = 1866;
 
 /**
@@ -117,4 +117,4 @@ template <std::size_t N> class UDPServer : public BowlerServer<N> {
   wifi_event_id_t event;
   bool connected{false};
 };
-} // namespace bowler
+} // namespace bowlerserver

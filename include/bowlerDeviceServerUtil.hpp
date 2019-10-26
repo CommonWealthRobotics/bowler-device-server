@@ -19,7 +19,7 @@
 #include "errno.h"
 #include <Arduino.h>
 
-namespace bowler {
+namespace bowlerserver {
 const std::int32_t BOWLER_ERROR = INT32_MAX;
 
 const std::int32_t DEFAULT_PACKET_SIZE = 64;
@@ -40,4 +40,4 @@ using time_t = uint32_t;
 #endif
 
 time_t getTime();
-} // namespace bowler
+} // namespace bowlerserver

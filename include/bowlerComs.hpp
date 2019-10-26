@@ -21,7 +21,7 @@
 #include <memory>
 #include <vector>
 
-namespace bowler {
+namespace bowlerserver {
 template <std::size_t N> class BowlerComs {
   public:
   virtual ~BowlerComs() = default;
@@ -53,4 +53,4 @@ template <std::size_t N> class BowlerComs {
    */
   virtual std::int32_t loop() = 0;
 };
-} // namespace bowler
+} // namespace bowlerserver

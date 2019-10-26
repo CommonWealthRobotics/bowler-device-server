@@ -20,7 +20,7 @@
 #include "bowlerPacket.hpp"
 #include <Arduino.h>
 
-namespace bowler {
+namespace bowlerserver {
 /**
  * A Packet that prints its payload to serial. Does not modify the payload.
  */
@@ -37,4 +37,4 @@ class EchoPacket : public Packet {
     return 1;
   }
 };
-} // namespace bowler
+} // namespace bowlerserver

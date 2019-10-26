@@ -22,7 +22,7 @@
 #include "serverManagementPacket.hpp"
 #include <map>
 
-namespace bowler {
+namespace bowlerserver {
 /**
  * Buffer format is:
  * <ID (1 byte)> <Seq Num (1 byte)> <ACK num (1 byte)> <Payload (N bytes)>.
@@ -243,4 +243,4 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
   std::unique_ptr<BowlerServer<N>> server;
   std::map<std::uint8_t, std::shared_ptr<Packet>> packets;
 };
-} // namespace bowler
+} // namespace bowlerserver

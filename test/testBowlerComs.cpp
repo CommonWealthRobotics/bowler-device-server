@@ -20,7 +20,7 @@
 #include "noopPacket.hpp"
 #include <unity.h>
 
-using namespace bowler;
+using namespace bowlerserver;
 
 #define SETUP_BOWLER_COMS                                                                          \
   MockBowlerServer<N> *server = new MockBowlerServer<N>();                                         \

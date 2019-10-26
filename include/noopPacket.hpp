@@ -19,7 +19,7 @@
 #include "bowlerPacket.hpp"
 #include <Arduino.h>
 
-namespace bowler {
+namespace bowlerserver {
 /**
  * A Packet which does nothing.
  */
@@ -32,4 +32,4 @@ class NoopPacket : public Packet {
     return 1;
   }
 };
-} // namespace bowler
+} // namespace bowlerserver

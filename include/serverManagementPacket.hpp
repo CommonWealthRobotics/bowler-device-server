@@ -20,7 +20,7 @@
 #include "bowlerPacket.hpp"
 #include <Arduino.h>
 
-namespace bowler {
+namespace bowlerserver {
 /**
  * A Packet which performs server management operations.
  */
@@ -52,4 +52,4 @@ template <std::size_t N> class ServerManagementPacket : public Packet {
   private:
   BowlerComs<N> *coms;
 };
-} // namespace bowler
+} // namespace bowlerserver

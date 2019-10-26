@@ -23,7 +23,7 @@
 #include <Arduino.h>
 #include <Esp32WifiManager.h>
 
-namespace bowler {
+namespace bowlerserver {
 template <std::size_t N> class BowlerComsController {
   public:
   void loop() {
@@ -102,4 +102,4 @@ template <std::size_t N> class BowlerComsController {
 #error "BowlerServerController not implemented for HID yet."
 #endif
 };
-} // namespace bowler
+} // namespace bowlerserver

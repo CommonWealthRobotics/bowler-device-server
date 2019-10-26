@@ -19,7 +19,7 @@
 #include "bowlerServer.hpp"
 #include <queue>
 
-namespace bowler {
+namespace bowlerserver {
 template <std::size_t N> class MockBowlerServer : public BowlerServer<N> {
   public:
   std::int32_t write(std::array<std::uint8_t, N> payload) override {
@@ -41,4 +41,4 @@ template <std::size_t N> class MockBowlerServer : public BowlerServer<N> {
   std::queue<std::array<std::uint8_t, N>> writesReceived;
   std::queue<std::array<std::uint8_t, N>> readsToSend;
 };
-} // namespace bowler
+} // namespace bowlerserver

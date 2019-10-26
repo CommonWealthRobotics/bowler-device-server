@@ -22,7 +22,7 @@
 #include <cstring>
 #include <vector>
 
-namespace bowler {
+namespace bowlerserver {
 /**
  * A Packet which records the payloads it receives.
  */
@@ -40,4 +40,4 @@ class MockPacket : public Packet {
 
   std::vector<std::array<std::uint8_t, DEFAULT_PAYLOAD_SIZE>> payloads;
 };
-} // namespace bowler
+} // namespace bowlerserver
