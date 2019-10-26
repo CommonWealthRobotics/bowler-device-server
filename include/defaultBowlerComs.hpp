@@ -40,6 +40,20 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
 
   virtual ~DefaultBowlerComs() = default;
 
+  void addEnsuredPacket(std::function<std::shared_ptr<Packet>(void)> iaddPacket) override {
+    ensuredPackets.push_back(iaddPacket);
+  }
+
+  std::int32_t addEnsuredPackets() override {
+    for (auto &&elem : ensuredPackets) {
+      if (addPacket(elem()) == BOWLER_ERROR) {
+        return BOWLER_ERROR;
+      }
+    }
+
+    return 1;
+  }
+
   /**
    * Adds a packet event handler. The packet id cannot already be used.
    *
@@ -100,13 +114,15 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
           auto id = getPacketId(data);
           auto packet = packets.find(id);
           if (packet == packets.end()) {
+            BOWLER_LOG("Packet with id %u was not found.\n", id);
+
             // The corresponding packet was not found, meaning there is no handler registered for
             // it. Clear the payload and reply.
             std::fill(std::next(data.begin(), HEADER_LENGTH), data.end(), 0);
 
             auto writeError = server->write(data);
             if (writeError == BOWLER_ERROR) {
-              Serial.printf(
+              BOWLER_LOG(
                 "Error while replying to unregistered packet: %d %s\n", errno, strerror(errno));
             }
 
@@ -122,14 +138,14 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
           }
         } else {
           // Error reading data
-          Serial.printf("Error reading: %d %s\n", errno, strerror(errno));
+          BOWLER_LOG("Error reading: %d %s\n", errno, strerror(errno));
         }
       }
     } else {
       // Error running isDataAvailable. EWOULDBLOCK is typical of having no data (not really an
       // error).
       if (errno != EWOULDBLOCK) {
-        Serial.printf("Error peeking: %d %s\n", errno, strerror(errno));
+        BOWLER_LOG("Error peeking: %d %s\n", errno, strerror(errno));
       }
     }
 
@@ -146,12 +162,12 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
   void handlePacketUnreliable(T &ipacket, std::array<std::uint8_t, N> &idata) {
     auto error = ipacket->second->event(idata.data() + HEADER_LENGTH);
     if (error == BOWLER_ERROR) {
-      Serial.printf("Error handling packet event: %d %s\n", errno, strerror(errno));
+      BOWLER_LOG("Error handling packet event: %d %s\n", errno, strerror(errno));
     }
 
     error = server->write(idata);
     if (error == BOWLER_ERROR) {
-      Serial.printf("Error writing: %d %s\n", errno, strerror(errno));
+      BOWLER_LOG("Error writing: %d %s\n", errno, strerror(errno));
     }
   }
 
@@ -161,20 +177,21 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
    * @param idata Data that was just read from the receive buffer.
    */
   template <typename T> void handlePacketReliable(T &ipacket, std::array<std::uint8_t, N> &idata) {
+    states_t &state = reliableState[ipacket->first];
     switch (state) {
     case waitForZero: {
       if (getSeqNum(idata) == 0) {
         // Right payload. Handle it.
         auto error = ipacket->second->event(idata.data() + HEADER_LENGTH);
         if (error == BOWLER_ERROR) {
-          Serial.printf("Error handling packet event: %d %s\n", errno, strerror(errno));
+          BOWLER_LOG("Error handling packet event: %d %s\n", errno, strerror(errno));
         }
 
         // ACK it and start waiting for the next packet.
         setAckNum(idata, 0);
         error = server->write(idata);
         if (error == BOWLER_ERROR) {
-          Serial.printf("Error writing: %d %s\n", errno, strerror(errno));
+          BOWLER_LOG("Error writing: %d %s\n", errno, strerror(errno));
         }
         state = waitForOne;
       } else {
@@ -183,7 +200,7 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
         setAckNum(idata, 1);
         auto error = server->write(idata);
         if (error == BOWLER_ERROR) {
-          Serial.printf("Error writing: %d %s\n", errno, strerror(errno));
+          BOWLER_LOG("Error writing: %d %s\n", errno, strerror(errno));
         }
       }
       break;
@@ -194,14 +211,14 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
         // Right payload. Handle it.
         auto error = ipacket->second->event(idata.data() + HEADER_LENGTH);
         if (error == BOWLER_ERROR) {
-          Serial.printf("Error handling packet event: %d %s\n", errno, strerror(errno));
+          BOWLER_LOG("Error handling packet event: %d %s\n", errno, strerror(errno));
         }
 
         // ACK it and start waiting for the next packet.
         setAckNum(idata, 1);
         error = server->write(idata);
         if (error == BOWLER_ERROR) {
-          Serial.printf("Error writing: %d %s\n", errno, strerror(errno));
+          BOWLER_LOG("Error writing: %d %s\n", errno, strerror(errno));
         }
         state = waitForZero;
       } else {
@@ -210,7 +227,7 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
         setAckNum(idata, 0);
         auto error = server->write(idata);
         if (error == BOWLER_ERROR) {
-          Serial.printf("Error writing: %d %s\n", errno, strerror(errno));
+          BOWLER_LOG("Error writing: %d %s\n", errno, strerror(errno));
         }
       }
       break;
@@ -239,8 +256,9 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
   }
 
   enum states_t { waitForZero, waitForOne };
-  states_t state{waitForZero};
   std::unique_ptr<BowlerServer<N>> server;
   std::map<std::uint8_t, std::shared_ptr<Packet>> packets;
+  std::map<std::uint8_t, states_t> reliableState;
+  std::vector<std::function<std::shared_ptr<Packet>(void)>> ensuredPackets;
 };
 } // namespace bowlerserver

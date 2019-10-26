@@ -31,7 +31,7 @@ class EchoPacket : public Packet {
 
   std::int32_t event(std::uint8_t *payload) override {
     for (int i = 0; i < DEFAULT_PAYLOAD_SIZE; i++) {
-      Serial.printf("%u, ", payload[i]);
+      BOWLER_LOG("%u, ", payload[i]);
     }
     Serial.print("\n");
     return 1;

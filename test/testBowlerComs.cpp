@@ -141,6 +141,28 @@ template <std::size_t N> void remove_packet() {
   TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data(), ids.data(), expected.size());
 }
 
+template <std::size_t N> void add_ensured_packets() {
+  SETUP_BOWLER_COMS;
+  coms.addEnsuredPacket([]() { return std::shared_ptr<MockPacket>(new MockPacket(2, false)); });
+  coms.addEnsuredPackets();
+
+  auto ids = coms.getAllPacketIDs();
+  std::array<std::uint8_t, 1> expected{2};
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data(), ids.data(), expected.size());
+}
+
+template <std::size_t N> void two_rdt_packets() {
+  SETUP_BOWLER_COMS;
+  MAKE_PACKET(NoopPacket, 2, true);
+  MAKE_PACKET(NoopPacket, 3, true);
+
+  // Send SeqNum 0 first (expected). Should ACK 0.
+  assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
+
+  // Send SeqNum 0 first (expected). Should ACK 0.
+  assertReceiveSend(server, coms, {3, 0, 1}, {3, 0, 0});
+}
+
 void setup() {
   delay(2000);
   UNITY_BEGIN();
@@ -154,6 +176,8 @@ void setup() {
   RUN_TEST(packet_does_not_get_header_data<DEFAULT_PACKET_SIZE>);
   RUN_TEST(get_all_packet_ids<DEFAULT_PACKET_SIZE>);
   RUN_TEST(remove_packet<DEFAULT_PACKET_SIZE>);
+  RUN_TEST(add_ensured_packets<DEFAULT_PACKET_SIZE>);
+  RUN_TEST(two_rdt_packets<DEFAULT_PACKET_SIZE>);
   UNITY_END();
 }
 

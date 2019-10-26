@@ -38,6 +38,19 @@ template <std::size_t N> class ServerManagementPacket : public Packet {
       for (auto &&id : coms->getAllPacketIDs()) {
         coms->removePacket(id);
       }
+
+      payload[0] = STATUS_ACCEPTED;
+      return 1;
+    }
+
+    case OPERATION_ADD_ENSURED_PACKETS: {
+      if (coms->addEnsuredPackets() == BOWLER_ERROR) {
+        payload[0] = STATUS_REJECTED_GENERIC;
+        return BOWLER_ERROR;
+      } else {
+        payload[0] = STATUS_ACCEPTED;
+        return 1;
+      }
     }
 
     default: {
@@ -45,8 +58,6 @@ template <std::size_t N> class ServerManagementPacket : public Packet {
       return BOWLER_ERROR;
     }
     }
-
-    return 1;
   }
 
   private:

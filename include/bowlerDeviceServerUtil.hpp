@@ -19,6 +19,10 @@
 #include "errno.h"
 #include <Arduino.h>
 
+#define BOWLER_LOG(...)                                                                            \
+  Serial.printf("%s:%d: ", __FILE__, __LINE__);                                                    \
+  Serial.printf(__VA_ARGS__)
+
 namespace bowlerserver {
 const std::int32_t BOWLER_ERROR = INT32_MAX;
 
@@ -29,6 +33,7 @@ const std::int32_t DEFAULT_PAYLOAD_SIZE = DEFAULT_PACKET_SIZE - HEADER_LENGTH;
 const std::uint8_t SERVER_MANAGEMENT_PACKET_ID = 1;
 
 const std::uint8_t OPERATION_DISCONNECT_ID = 1;
+const std::uint8_t OPERATION_ADD_ENSURED_PACKETS = 2;
 
 const std::uint8_t STATUS_ACCEPTED = 1;
 const std::uint8_t STATUS_REJECTED_GENERIC = 2;

@@ -18,6 +18,7 @@
 
 #include "bowlerPacket.hpp"
 #include <array>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -25,6 +26,10 @@ namespace bowlerserver {
 template <std::size_t N> class BowlerComs {
   public:
   virtual ~BowlerComs() = default;
+
+  virtual void addEnsuredPacket(std::function<std::shared_ptr<Packet>(void)> iaddPacket) = 0;
+
+  virtual std::int32_t addEnsuredPackets() = 0;
 
   /**
    * Adds a packet event handler. The packet id cannot already be used.
