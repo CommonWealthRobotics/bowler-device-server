@@ -16,20 +16,40 @@
  */
 #pragma once
 
+#include "bowlerDeviceServerUtil.hpp"
 #include "bowlerPacket.hpp"
 #include <Arduino.h>
 
 namespace bowler {
 /**
- * A Packet which does nothing.
+ * A Packet which performs server management operations.
  */
-class NoopPacket : public Packet {
+template <std::size_t N> class ServerManagementPacket : public Packet {
   public:
-  NoopPacket(std::uint8_t iid, bool iisReliable = false) : Packet(iid, iisReliable) {
+  ServerManagementPacket(BowlerComs<N> *icoms)
+    : Packet(SERVER_MANAGEMENT_PACKET_ID, true), coms(icoms) {
   }
 
   std::int32_t event(std::uint8_t *payload) override {
+    const std::uint8_t operation = payload[0];
+
+    switch (operation) {
+    case OPERATION_DISCONNECT_ID: {
+      for (auto &&id : coms->getAllPacketIDs()) {
+        coms->removePacket(id);
+      }
+    }
+
+    default: {
+      errno = EINVAL;
+      return BOWLER_ERROR;
+    }
+    }
+
     return 1;
   }
+
+  private:
+  BowlerComs<N> *coms;
 };
 } // namespace bowler

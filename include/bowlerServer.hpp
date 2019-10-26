@@ -19,6 +19,7 @@
 #include <array>
 #include <cstdint>
 
+namespace bowler {
 /**
  * The server used to interact with the PC side.
  */
@@ -50,3 +51,4 @@ template <std::size_t N> class BowlerServer {
    */
   virtual std::int32_t isDataAvailable(bool &iavailable) = 0;
 };
+} // namespace bowler

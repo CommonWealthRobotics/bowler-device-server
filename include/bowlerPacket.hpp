@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 
+namespace bowler {
 class Packet {
   public:
   Packet(std::uint8_t iid, bool iisReliable = false) : id(iid), m_isReliable(iisReliable) {
@@ -30,3 +31,4 @@ class Packet {
   std::uint8_t id;
   bool m_isReliable;
 };
+} // namespace bowler

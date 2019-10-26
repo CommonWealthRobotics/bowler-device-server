@@ -16,13 +16,14 @@
  */
 #pragma once
 
-#include "bowlerComs.hpp"
 #include "bowlerDeviceServerUtil.hpp"
 #include "bowlerUdpServer.hpp"
+#include "defaultBowlerComs.hpp"
 #include "noopPacket.hpp"
 #include <Arduino.h>
 #include <Esp32WifiManager.h>
 
+namespace bowler {
 template <std::size_t N> class BowlerComsController {
   public:
   void loop() {
@@ -96,8 +97,9 @@ template <std::size_t N> class BowlerComsController {
 
 #if defined(USE_WIFI)
   WifiManager manager;
-  BowlerComs<N> coms{std::unique_ptr<UDPServer<N>>(new UDPServer<N>())};
+  DefaultBowlerComs<N> coms{std::unique_ptr<UDPServer<N>>(new UDPServer<N>())};
 #elif defined(USE_HID)
 #error "BowlerServerController not implemented for HID yet."
 #endif
 };
+} // namespace bowler

@@ -19,15 +19,25 @@
 #include "errno.h"
 #include <Arduino.h>
 
-#define BOWLER_ERROR INT32_MAX
-#define DEFAULT_PACKET_SIZE 64
-#define HEADER_LENGTH 3
-#define DEFAULT_PAYLOAD_SIZE (DEFAULT_PACKET_SIZE - HEADER_LENGTH)
+namespace bowler {
+const std::int32_t BOWLER_ERROR = INT32_MAX;
+
+const std::int32_t DEFAULT_PACKET_SIZE = 64;
+const std::int32_t HEADER_LENGTH = 3;
+const std::int32_t DEFAULT_PAYLOAD_SIZE = DEFAULT_PACKET_SIZE - HEADER_LENGTH;
+
+const std::uint8_t SERVER_MANAGEMENT_PACKET_ID = 1;
+
+const std::uint8_t OPERATION_DISCONNECT_ID = 1;
+
+const std::uint8_t STATUS_ACCEPTED = 1;
+const std::uint8_t STATUS_REJECTED_GENERIC = 2;
 
 #if defined(PLATFORM_ESP32)
-#define time_t int64_t
+using time_t = int64_t;
 #elif defined(PLATFORM_TEENSY)
-#define time_t uint32_t
+using time_t = uint32_t;
 #endif
 
 time_t getTime();
+} // namespace bowler

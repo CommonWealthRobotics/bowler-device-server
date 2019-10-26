@@ -20,6 +20,8 @@
 #include <Arduino.h>
 #include <Esp32WifiManager.h>
 
+using namespace bowler;
+
 BowlerComsController<DEFAULT_PACKET_SIZE> *controller;
 
 void setup() {

@@ -14,15 +14,17 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with bowler-device-server.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "bowlerComs.hpp"
+#include "defaultBowlerComs.hpp"
 #include "mockBowlerServer.hpp"
 #include "mockPacket.hpp"
 #include "noopPacket.hpp"
 #include <unity.h>
 
+using namespace bowler;
+
 #define SETUP_BOWLER_COMS                                                                          \
   MockBowlerServer<N> *server = new MockBowlerServer<N>();                                         \
-  BowlerComs<N> coms {                                                                             \
+  DefaultBowlerComs<N> coms {                                                                      \
     std::unique_ptr<MockBowlerServer<N>>(server)                                                   \
   }
 
@@ -30,7 +32,7 @@
 
 template <std::size_t N>
 static void assertReceiveSend(MockBowlerServer<N> *server,
-                              BowlerComs<N> &coms,
+                              DefaultBowlerComs<N> &coms,
                               const std::array<std::uint8_t, N> &receive,
                               const std::array<std::uint8_t, N> &send) {
   server->readsToSend.push(receive);
@@ -117,6 +119,28 @@ template <std::size_t N> void packet_does_not_get_header_data() {
   TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data(), mockPacket->payloads[0].data(), expected.size());
 }
 
+template <std::size_t N> void get_all_packet_ids() {
+  SETUP_BOWLER_COMS;
+  coms.addPacket(std::shared_ptr<MockPacket>(new MockPacket(2, false)));
+  coms.addPacket(std::shared_ptr<MockPacket>(new MockPacket(3, false)));
+
+  auto ids = coms.getAllPacketIDs();
+  std::array<std::uint8_t, 2> expected{2, 3};
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data(), ids.data(), expected.size());
+}
+
+template <std::size_t N> void remove_packet() {
+  SETUP_BOWLER_COMS;
+  coms.addPacket(std::shared_ptr<MockPacket>(new MockPacket(2, false)));
+  coms.addPacket(std::shared_ptr<MockPacket>(new MockPacket(3, false)));
+
+  coms.removePacket(2);
+
+  auto ids = coms.getAllPacketIDs();
+  std::array<std::uint8_t, 1> expected{3};
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data(), ids.data(), expected.size());
+}
+
 void setup() {
   delay(2000);
   UNITY_BEGIN();
@@ -128,6 +152,8 @@ void setup() {
   RUN_TEST(attach_server_management_packet_id<DEFAULT_PACKET_SIZE>);
   RUN_TEST(unreliable<DEFAULT_PACKET_SIZE>);
   RUN_TEST(packet_does_not_get_header_data<DEFAULT_PACKET_SIZE>);
+  RUN_TEST(get_all_packet_ids<DEFAULT_PACKET_SIZE>);
+  RUN_TEST(remove_packet<DEFAULT_PACKET_SIZE>);
   UNITY_END();
 }
 
