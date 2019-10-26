@@ -1,6 +1,6 @@
 {
     "name": "bowler-device-server",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "keywords": "bowler, rpc, esp32, teensy, wifi, hid",
     "description": "The device-side implementation of the Bowler server.",
     "repository": {
