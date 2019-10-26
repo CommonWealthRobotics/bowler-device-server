@@ -35,6 +35,18 @@ static void assertReceiveSend(MockBowlerServer<N> *server,
                               DefaultBowlerComs<N> &coms,
                               const std::array<std::uint8_t, N> &receive,
                               const std::array<std::uint8_t, N> &send) {
+  // Serial.printf("Receive: ");
+  // for (auto &&elem : receive) {
+  //   Serial.printf("%u, ", elem);
+  // }
+  // Serial.printf("\n");
+
+  // Serial.printf("Send: ");
+  // for (auto &&elem : send) {
+  //   Serial.printf("%u, ", elem);
+  // }
+  // Serial.printf("\n");
+
   server->readsToSend.push(receive);
   coms.loop();
   TEST_ASSERT_EQUAL_UINT8_ARRAY(send.data(), server->writesReceived.front().data(), N);
@@ -163,6 +175,28 @@ template <std::size_t N> void two_rdt_packets() {
   assertReceiveSend(server, coms, {3, 0, 1}, {3, 0, 0});
 }
 
+template <std::size_t N> void disconnect_before_add_ensured_packets() {
+  SETUP_BOWLER_COMS;
+  coms.addEnsuredPacket([]() { return std::shared_ptr<NoopPacket>(new NoopPacket(2, true)); });
+
+  // Send disconnect
+  assertReceiveSend(server, coms, {1, 0, 1, 1}, {1, 0, 0, 1});
+  // Should contain nothing after the disconnect (except server management packet, which should not
+  // be returned here)
+  auto ids = coms.getAllPacketIDs();
+  TEST_ASSERT_EQUAL_INT(0, ids.size());
+
+  // Send add all ensured packets
+  assertReceiveSend(server, coms, {1, 0, 1, 2}, {1, 0, 0, 1});
+  // Should contain the one NoopPacket we added earlier
+  ids = coms.getAllPacketIDs();
+  std::array<std::uint8_t, 1> expected{2};
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data(), ids.data(), expected.size());
+
+  // Send SeqNum 0 first (expected). Should ACK 0.
+  assertReceiveSend(server, coms, {2, 0, 1}, {2, 0, 0});
+}
+
 void setup() {
   delay(2000);
   UNITY_BEGIN();
@@ -178,6 +212,7 @@ void setup() {
   RUN_TEST(remove_packet<DEFAULT_PACKET_SIZE>);
   RUN_TEST(add_ensured_packets<DEFAULT_PACKET_SIZE>);
   RUN_TEST(two_rdt_packets<DEFAULT_PACKET_SIZE>);
+  RUN_TEST(disconnect_before_add_ensured_packets<DEFAULT_PACKET_SIZE>);
   UNITY_END();
 }
 

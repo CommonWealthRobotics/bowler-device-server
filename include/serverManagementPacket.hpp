@@ -32,7 +32,6 @@ template <std::size_t N> class ServerManagementPacket : public Packet {
 
   std::int32_t event(std::uint8_t *payload) override {
     const std::uint8_t operation = payload[0];
-
     switch (operation) {
     case OPERATION_DISCONNECT_ID: {
       for (auto &&id : coms->getAllPacketIDs()) {
@@ -40,7 +39,7 @@ template <std::size_t N> class ServerManagementPacket : public Packet {
       }
 
       payload[0] = STATUS_ACCEPTED;
-      return 1;
+      return 2;
     }
 
     case OPERATION_ADD_ENSURED_PACKETS: {

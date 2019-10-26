@@ -62,6 +62,12 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
    */
   std::int32_t addPacket(std::shared_ptr<Packet> ipacket) override {
     if (packets.find(ipacket->getId()) == packets.end()) {
+      if (ipacket->isReliable()) {
+        // Initialize RDT state
+        reliableState[ipacket->getId()] = waitForZero;
+      }
+
+      // Save the packet last so we can `move` it
       packets[ipacket->getId()] = std::move(ipacket);
     } else {
       // The packet id is already used
@@ -89,6 +95,7 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
     ids.reserve(packets.size() - 1); // Minus 1 for the management packet
 
     for (auto &&elem : packets) {
+      // Don't return the server management packet
       if (elem.first != SERVER_MANAGEMENT_PACKET_ID) {
         ids.push_back(elem.first);
       }
@@ -182,18 +189,25 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
     case waitForZero: {
       if (getSeqNum(idata) == 0) {
         // Right payload. Handle it.
-        auto error = ipacket->second->event(idata.data() + HEADER_LENGTH);
-        if (error == BOWLER_ERROR) {
+        const auto eventError = ipacket->second->event(idata.data() + HEADER_LENGTH);
+        if (eventError == BOWLER_ERROR) {
           BOWLER_LOG("Error handling packet event: %d %s\n", errno, strerror(errno));
         }
 
         // ACK it and start waiting for the next packet.
         setAckNum(idata, 0);
-        error = server->write(idata);
+        auto error = server->write(idata);
         if (error == BOWLER_ERROR) {
           BOWLER_LOG("Error writing: %d %s\n", errno, strerror(errno));
         }
-        state = waitForOne;
+
+        if (ipacket->first == SERVER_MANAGEMENT_PACKET_ID && eventError == 2) {
+          // The server management packet processed a disconnection, so force the state into the
+          // starting state
+          state = waitForZero;
+        } else {
+          state = waitForOne;
+        }
       } else {
         // Wrong packet. Clear the payload and ACK 1.
         std::fill(std::next(idata.begin(), HEADER_LENGTH), idata.end(), 0);
@@ -220,6 +234,9 @@ template <std::size_t N> class DefaultBowlerComs : public BowlerComs<N> {
         if (error == BOWLER_ERROR) {
           BOWLER_LOG("Error writing: %d %s\n", errno, strerror(errno));
         }
+
+        // Even if the server management packet processed a disconnection, this returns us to the
+        // starting state (which we want)
         state = waitForZero;
       } else {
         // Wrong packet. Clear the payload and ACK 0.
