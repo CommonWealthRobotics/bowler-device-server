@@ -54,6 +54,7 @@
         "typeinfo": "cpp",
         "*.ipp": "cpp",
         "map": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "string": "cpp"
     }
 }
